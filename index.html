@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>爱心代码</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000;
+            overflow: hidden;
+            touch-action: none;
+        }
+        canvas { display: block; }
+        .text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ff6b9d;
+            font-size: 24px;
+            font-family: "Microsoft YaHei", sans-serif;
+            text-shadow: 0 0 10px #ff6b9d;
+            pointer-events: none;
+            white-space: nowrap;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div class="text">❤️ 我爱你 ❤️</div>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let hearts = [];
+        
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener('resize', resize);
+        
+        // 爱心粒子类
+        class Heart {
+            constructor() {
+                this.reset();
+            }
+            
+            reset() {
+                this.x = Math.random() * width;
+                this.y = height + Math.random() * 100;
+                this.size = Math.random() * 20 + 10;
+                this.speed = Math.random() * 2 + 1;
+                this.color = `hsl(${Math.random() * 30 + 330}, 100%, 70%)`;
+                this.opacity = Math.random() * 0.5 + 0.5;
+                this.wobble = Math.random() * Math.PI * 2;
+                this.wobbleSpeed = Math.random() * 0.05 + 0.02;
+            }
+            
+            update() {
+                this.y -= this.speed;
+                this.wobble += this.wobbleSpeed;
+                this.x += Math.sin(this.wobble) * 0.5;
+                
+                if (this.y < -50) this.reset();
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.opacity;
+                ctx.fillStyle = this.color;
+                ctx.translate(this.x, this.y);
+                ctx.scale(this.size / 20, this.size / 20);
+                
+                // 绘制爱心形状
+                ctx.beginPath();
+                ctx.moveTo(0, -5);
+                ctx.bezierCurveTo(0, -15, -15, -15, -15, -5);
+                ctx.bezierCurveTo(-15, 5, 0, 15, 0, 25);
+                ctx.bezierCurveTo(0, 15, 15, 5, 15, -5);
+                ctx.bezierCurveTo(15, -15, 0, -15, 0, -5);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+        }
+        
+        // 初始化爱心
+        for (let i = 0; i < 50; i++) {
+            const heart = new Heart();
+            heart.y = Math.random() * height;
+            hearts.push(heart);
+        }
+        
+        // 绘制中心大爱心
+        function drawCenterHeart() {
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const time = Date.now() * 0.002;
+            const scale = 1 + Math.sin(time) * 0.1;
+            
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.scale(scale, scale);
+            
+            // 发光效果
+            const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 150);
+            gradient.addColorStop(0, 'rgba(255, 107, 157, 0.8)');
+            gradient.addColorStop(0.5, 'rgba(255, 107, 157, 0.3)');
+            gradient.addColorStop(1, 'rgba(255, 107, 157, 0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(-150, -150, 300, 300);
+            
+            // 爱心形状
+            ctx.fillStyle = '#ff6b9d';
+            ctx.shadowColor = '#ff6b9d';
+            ctx.shadowBlur = 30;
+            
+            ctx.beginPath();
+            ctx.moveTo(0, -30);
+            ctx.bezierCurveTo(0, -80, -80, -80, -80, -30);
+            ctx.bezierCurveTo(-80, 20, 0, 80, 0, 120);
+            ctx.bezierCurveTo(0, 80, 80, 20, 80, -30);
+            ctx.bezierCurveTo(80, -80, 0, -80, 0, -30);
+            ctx.fill();
+            
+            ctx.restore();
+        }
+        
+        // 动画循环
+        function animate() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, width, height);
+            
+            hearts.forEach(heart => {
+                heart.update();
+                heart.draw();
+            });
+            
+            drawCenterHeart();
+            
+            requestAnimationFrame(animate);
+        }
+        
+        animate();
+        
+        // 点击效果
+        document.addEventListener('click', (e) => {
+            for (let i = 0; i < 10; i++) {
+                const heart = new Heart();
+                heart.x = e.clientX;
+                heart.y = e.clientY;
+                heart.speed = Math.random() * 3 + 2;
+                hearts.push(heart);
+            }
+        });
+    </script>
+</body>
+</html>
