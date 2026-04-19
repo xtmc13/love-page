@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>爱心代码</title>
+    <title>❤️ 我爱你</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: #000;
+            background: linear-gradient(to bottom, #0f0c29, #302b63, #24243e);
             overflow: hidden;
+            height: 100vh;
             touch-action: none;
         }
         canvas { display: block; }
@@ -17,29 +18,40 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: #ff6b9d;
-            font-size: 24px;
+            color: #fff;
+            font-size: 28px;
             font-family: "Microsoft YaHei", sans-serif;
-            text-shadow: 0 0 10px #ff6b9d;
+            text-shadow: 0 0 20px #ff69b4, 0 0 40px #ff69b4;
             pointer-events: none;
             white-space: nowrap;
-            animation: pulse 2s ease-in-out infinite;
+            z-index: 10;
+            animation: fadeIn 2s ease-in;
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 0.8; }
-            50% { opacity: 1; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+        .click-hint {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.6);
+            font-size: 14px;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
     <canvas id="canvas"></canvas>
     <div class="text">❤️ 我爱你 ❤️</div>
+    <div class="click-hint">点击屏幕 ❤️</div>
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         
         let width, height;
-        let hearts = [];
+        let particles = [];
         
         function resize() {
             width = canvas.width = window.innerWidth;
@@ -48,56 +60,71 @@
         resize();
         window.addEventListener('resize', resize);
         
-        // 爱心粒子类
-        class Heart {
-            constructor() {
-                this.reset();
+        // 樱花花瓣类
+        class Petal {
+            constructor(x, y, isClick = false) {
+                this.x = x || Math.random() * width;
+                this.y = y || -10;
+                this.size = Math.random() * 8 + 4;
+                this.speedX = Math.random() * 2 - 1;
+                this.speedY = isClick ? Math.random() * 3 + 2 : Math.random() * 1.5 + 0.5;
+                this.rotation = Math.random() * 360;
+                this.rotationSpeed = Math.random() * 4 - 2;
+                this.opacity = Math.random() * 0.5 + 0.5;
+                this.color = `rgba(255, ${Math.floor(Math.random() * 50 + 183)}, ${Math.floor(Math.random() * 50 + 207)}, ${this.opacity})`;
+                this.type = Math.floor(Math.random() * 3); // 0: 圆形, 1: 椭圆形, 2: 心形
+            }
+            
+            update() {
+                this.y += this.speedY;
+                this.x += this.speedX + Math.sin(this.y * 0.01) * 0.5;
+                this.rotation += this.rotationSpeed;
+                
+                if (this.y > height + 20) {
+                    this.reset();
+                }
             }
             
             reset() {
                 this.x = Math.random() * width;
-                this.y = height + Math.random() * 100;
-                this.size = Math.random() * 20 + 10;
-                this.speed = Math.random() * 2 + 1;
-                this.color = `hsl(${Math.random() * 30 + 330}, 100%, 70%)`;
-                this.opacity = Math.random() * 0.5 + 0.5;
-                this.wobble = Math.random() * Math.PI * 2;
-                this.wobbleSpeed = Math.random() * 0.05 + 0.02;
-            }
-            
-            update() {
-                this.y -= this.speed;
-                this.wobble += this.wobbleSpeed;
-                this.x += Math.sin(this.wobble) * 0.5;
-                
-                if (this.y < -50) this.reset();
+                this.y = -10;
+                this.size = Math.random() * 8 + 4;
             }
             
             draw() {
                 ctx.save();
-                ctx.globalAlpha = this.opacity;
-                ctx.fillStyle = this.color;
                 ctx.translate(this.x, this.y);
-                ctx.scale(this.size / 20, this.size / 20);
+                ctx.rotate(this.rotation * Math.PI / 180);
+                ctx.fillStyle = this.color;
                 
-                // 绘制爱心形状
-                ctx.beginPath();
-                ctx.moveTo(0, -5);
-                ctx.bezierCurveTo(0, -15, -15, -15, -15, -5);
-                ctx.bezierCurveTo(-15, 5, 0, 15, 0, 25);
-                ctx.bezierCurveTo(0, 15, 15, 5, 15, -5);
-                ctx.bezierCurveTo(15, -15, 0, -15, 0, -5);
-                ctx.fill();
+                if (this.type === 0) {
+                    // 圆形花瓣
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (this.type === 1) {
+                    // 椭圆形
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, this.size / 2, this.size / 3, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // 简化心形
+                    ctx.beginPath();
+                    ctx.moveTo(0, -this.size/4);
+                    ctx.bezierCurveTo(this.size/2, -this.size, this.size, -this.size/4, 0, this.size/2);
+                    ctx.bezierCurveTo(-this.size, -this.size/4, -this.size/2, -this.size, 0, -this.size/4);
+                    ctx.fill();
+                }
                 
                 ctx.restore();
             }
         }
         
-        // 初始化爱心
-        for (let i = 0; i < 50; i++) {
-            const heart = new Heart();
-            heart.y = Math.random() * height;
-            hearts.push(heart);
+        // 初始化樱花
+        for (let i = 0; i < 80; i++) {
+            const petal = new Petal();
+            petal.y = Math.random() * height;
+            particles.push(petal);
         }
         
         // 绘制中心大爱心
@@ -105,31 +132,32 @@
             const centerX = width / 2;
             const centerY = height / 2;
             const time = Date.now() * 0.002;
-            const scale = 1 + Math.sin(time) * 0.1;
+            const scale = 1 + Math.sin(time) * 0.08;
+            const glow = 20 + Math.sin(time) * 10;
             
             ctx.save();
             ctx.translate(centerX, centerY);
             ctx.scale(scale, scale);
             
             // 发光效果
-            const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 150);
-            gradient.addColorStop(0, 'rgba(255, 107, 157, 0.8)');
-            gradient.addColorStop(0.5, 'rgba(255, 107, 157, 0.3)');
-            gradient.addColorStop(1, 'rgba(255, 107, 157, 0)');
+            const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 120);
+            gradient.addColorStop(0, 'rgba(255, 105, 180, 0.6)');
+            gradient.addColorStop(0.5, 'rgba(255, 105, 180, 0.2)');
+            gradient.addColorStop(1, 'rgba(255, 105, 180, 0)');
             ctx.fillStyle = gradient;
-            ctx.fillRect(-150, -150, 300, 300);
+            ctx.fillRect(-120, -120, 240, 240);
             
-            // 爱心形状
-            ctx.fillStyle = '#ff6b9d';
-            ctx.shadowColor = '#ff6b9d';
-            ctx.shadowBlur = 30;
+            // 爱心
+            ctx.fillStyle = '#ff69b4';
+            ctx.shadowColor = '#ff69b4';
+            ctx.shadowBlur = glow;
             
             ctx.beginPath();
-            ctx.moveTo(0, -30);
-            ctx.bezierCurveTo(0, -80, -80, -80, -80, -30);
-            ctx.bezierCurveTo(-80, 20, 0, 80, 0, 120);
-            ctx.bezierCurveTo(0, 80, 80, 20, 80, -30);
-            ctx.bezierCurveTo(80, -80, 0, -80, 0, -30);
+            ctx.moveTo(0, -25);
+            ctx.bezierCurveTo(0, -60, -60, -60, -60, -25);
+            ctx.bezierCurveTo(-60, 10, 0, 50, 0, 70);
+            ctx.bezierCurveTo(0, 50, 60, 10, 60, -25);
+            ctx.bezierCurveTo(60, -60, 0, -60, 0, -25);
             ctx.fill();
             
             ctx.restore();
@@ -137,12 +165,13 @@
         
         // 动画循环
         function animate() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            // 渐变背景效果
+            ctx.fillStyle = 'rgba(15, 12, 41, 0.15)';
             ctx.fillRect(0, 0, width, height);
             
-            hearts.forEach(heart => {
-                heart.update();
-                heart.draw();
+            particles.forEach(p => {
+                p.update();
+                p.draw();
             });
             
             drawCenterHeart();
@@ -152,14 +181,18 @@
         
         animate();
         
-        // 点击效果
+        // 点击增加樱花
         document.addEventListener('click', (e) => {
-            for (let i = 0; i < 10; i++) {
-                const heart = new Heart();
-                heart.x = e.clientX;
-                heart.y = e.clientY;
-                heart.speed = Math.random() * 3 + 2;
-                hearts.push(heart);
+            for (let i = 0; i < 20; i++) {
+                particles.push(new Petal(e.clientX, e.clientY, true));
+            }
+        });
+        
+        // 触摸也支持
+        document.addEventListener('touchstart', (e) => {
+            for (let i = 0; i < 20; i++) {
+                const touch = e.touches[0];
+                particles.push(new Petal(touch.clientX, touch.clientY, true));
             }
         });
     </script>
